@@ -185,7 +185,7 @@ The evaluation tests:
 
 See [evaluation/README.md](evaluation/README.md) for details.
 
-## Capstone Requirements
+<!-- ## Capstone Requirements
 
 This project fulfills all capstone requirements:
 
@@ -194,9 +194,9 @@ This project fulfills all capstone requirements:
 ✅ **Memory** - Short-term (session) and long-term (database) storage
 ✅ **Evaluation** - Automated test scenarios with metrics
 ✅ **Production Thinking** - See [PRODUCTION_SCALING.md](PRODUCTION_SCALING.md)
-✅ **Public Repository** - Clean code, documentation, and examples
+✅ **Public Repository** - Clean code, documentation, and examples -->
 
-## Production Scaling
+<!-- ## Production Scaling
 
 For a detailed discussion of how to scale this prototype to production, see [PRODUCTION_SCALING.md](PRODUCTION_SCALING.md), which covers:
 
@@ -205,7 +205,7 @@ For a detailed discussion of how to scale this prototype to production, see [PRO
 - Cloud storage integration (Google Drive, Dropbox, etc.)
 - Multimodal support (OCR, audio transcription, video)
 - Security and privacy considerations
-- Cost optimization strategies
+- Cost optimization strategies -->
 
 ## Technology Stack
 
@@ -217,7 +217,7 @@ For a detailed discussion of how to scale this prototype to production, see [PRO
 - **CLI**: Rich, Click
 - **Language**: Python 3.8+
 
-## Limitations
+<!-- ## Limitations
 
 This is a **prototype** with the following limitations:
 
@@ -228,7 +228,7 @@ This is a **prototype** with the following limitations:
 - No cloud storage integration
 - SQLite database (not production-scale)
 
-See [PRODUCTION_SCALING.md](PRODUCTION_SCALING.md) for how to address these.
+See [PRODUCTION_SCALING.md](PRODUCTION_SCALING.md) for how to address these. -->
 
 ## Contributing
 
@@ -238,11 +238,11 @@ This is a capstone project, but suggestions and feedback are welcome! Please ope
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-## Acknowledgments
+<!-- ## Acknowledgments
 
 - [Kaggle 5-Day GenAI Agents Intensive](https://www.kaggle.com/learn-guide/5-day-agents) for project inspiration
 - [Google ADK](https://google.github.io/adk-docs/) for the agent framework
-- Course instructors and community for guidance
+- Course instructors and community for guidance -->
 
 ## References
 
