@@ -1,0 +1,21 @@
+TODO List
+
+Work:
+[ ] Finish Q1 performance review
+[ ] Review PRs from team
+[ ] Update project documentation
+[ ] Schedule 1-on-1s with team members
+[ ] Prepare presentation for stakeholder meeting
+
+Personal:
+[ ] Renew gym membership
+[ ] Book dentist appointment
+[ ] Order birthday gift for Sarah
+[ ] Plan weekend trip
+[ ] Read "Designing Data-Intensive Applications"
+
+Learning:
+[ ] Complete Kaggle competition
+[ ] Study transformer architectures paper
+[ ] Practice LeetCode problems
+[ ] Watch conference talks on YouTube

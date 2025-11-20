@@ -1,0 +1,26 @@
+Team Meeting Notes - 2024-01-15
+
+Attendees: Sarah, Mike, John, Lisa
+
+Topics Discussed:
+1. Q1 Project Planning
+   - Launch new recommendation feature by March
+   - Need to finalize ML model by end of January
+   - Sarah to coordinate with product team
+
+2. Technical Debt
+   - Refactor authentication service
+   - Upgrade to Python 3.11
+   - Mike volunteers to lead this effort
+
+3. Hiring
+   - Interview candidates for ML engineer role
+   - Lisa to schedule technical interviews next week
+
+Action Items:
+- John: Finish ML model evaluation by Friday
+- Sarah: Schedule product sync meeting
+- Mike: Create technical debt sprint plan
+- Lisa: Send interview schedules
+
+Next Meeting: 2024-01-22

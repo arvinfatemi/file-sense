@@ -1,0 +1,22 @@
+John Doe
+Software Engineer
+
+EXPERIENCE
+Senior Software Engineer | Tech Corp | 2020-Present
+- Developed scalable microservices using Python and Go
+- Led team of 5 engineers in building ML-powered recommendation system
+- Improved system performance by 40% through optimization
+
+Software Engineer | StartupXYZ | 2018-2020
+- Built full-stack web applications using React and Node.js
+- Implemented CI/CD pipelines and automated testing
+- Contributed to open-source projects
+
+EDUCATION
+Master of Science in Computer Science | MIT | 2018
+Bachelor of Science in Computer Science | UC Berkeley | 2016
+
+SKILLS
+Programming: Python, Java, JavaScript, Go, SQL
+Frameworks: React, Django, Flask, TensorFlow
+Cloud: AWS, GCP, Docker, Kubernetes

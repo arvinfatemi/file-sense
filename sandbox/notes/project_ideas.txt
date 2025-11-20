@@ -1,0 +1,25 @@
+Personal Project Ideas
+
+1. AI File Organizer
+   - Use LLMs to automatically tag and organize files
+   - Semantic search over personal documents
+   - Could be useful for managing research papers
+   - Technologies: Python, ChromaDB, Transformers
+
+2. Budget Tracker App
+   - Simple expense tracking with ML categorization
+   - Mobile-first design
+   - Bank integration via Plaid API
+   - Technologies: React Native, Node.js, MongoDB
+
+3. Recipe Recommendation System
+   - Based on available ingredients
+   - Dietary restrictions and preferences
+   - Use collaborative filtering
+   - Technologies: Python, FastAPI, PostgreSQL
+
+4. Reading List Manager
+   - Track books to read, currently reading, completed
+   - Get recommendations based on reading history
+   - Integration with Goodreads API
+   - Technologies: Next.js, TypeScript, Supabase

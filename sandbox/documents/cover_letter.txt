@@ -1,0 +1,12 @@
+Dear Hiring Manager,
+
+I am writing to express my interest in the Senior Machine Learning Engineer position at AI Innovations Inc. With over 5 years of experience in software engineering and a strong focus on machine learning systems, I believe I would be an excellent fit for your team.
+
+In my current role at Tech Corp, I have led the development of ML-powered recommendation systems that serve millions of users daily. I have extensive experience with TensorFlow, PyTorch, and production ML infrastructure on AWS and GCP.
+
+I am particularly excited about your company's work in natural language processing and computer vision. My thesis work at MIT focused on transformer architectures for NLP tasks, and I have continued to stay at the forefront of AI research.
+
+I would welcome the opportunity to discuss how my skills and experience align with your needs.
+
+Sincerely,
+John Doe
