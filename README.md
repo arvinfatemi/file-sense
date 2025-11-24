@@ -160,31 +160,188 @@ file-sense/
 
 ## Architecture
 
-### Agentic System
+### Agentic System Overview
 
-The system uses a multi-agent architecture with the **Orchestrator Agent** coordinating multiple specialized tools:
+The system implements an **agentic architecture** using Google's Agent Development Kit (ADK), where an intelligent agent coordinates multiple specialized tools to accomplish user requests.
 
 ```
-User Query → Orchestrator Agent → Tools (File, Search, Tag, Collection)
-                ↓
-          Short-term Memory (Conversation context)
-                ↓
-          Long-term Memory (SQLite + ChromaDB)
-                ↓
-          Sandbox Filesystem
+┌─────────────────────────────────────────────────────────────┐
+│                          USER                                │
+│                "Find my machine learning files"              │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  GOOGLE ADK AGENT                            │
+│                 (Gemini 2.0 Flash)                          │
+│                                                              │
+│  • Understands natural language intent                      │
+│  • Reasons about which tools to use                         │
+│  • Executes tools with appropriate parameters               │
+│  • Synthesizes coherent responses                           │
+│                                                              │
+│  Agent Definition:                                          │
+│    Agent(                                                   │
+│      name="file_concierge",                                │
+│      model="gemini-2.0-flash-exp",                         │
+│      tools=[9 specialized functions]                       │
+│    )                                                        │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+            ┌────────────┴────────────┐
+            │    Tool Selection       │
+            │  & Execution Engine     │
+            └────────────┬────────────┘
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+        ▼                ▼                ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│ Search Tools │  │  Tag Tools   │  │ Collection   │
+│              │  │              │  │   Tools      │
+│ • search_    │  │ • suggest_   │  │ • create_    │
+│   files      │  │   tags       │  │   collection │
+│ • list_      │  │ • apply_tags │  │ • add_to_    │
+│   files      │  │ • get_file_  │  │   collection │
+│ • read_file  │  │   tags       │  │ • get_       │
+│              │  │              │  │   collection_│
+│              │  │              │  │   files      │
+└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+       │                 │                 │
+       └─────────────────┼─────────────────┘
+                         │
+        ┌────────────────┴────────────────┐
+        │                                 │
+        ▼                                 ▼
+┌──────────────────┐            ┌──────────────────┐
+│  Vector Store    │            │  Long-term       │
+│  (ChromaDB)      │            │  Memory          │
+│                  │            │  (SQLite)        │
+│  • Embeddings    │            │                  │
+│  • Semantic      │            │  Tables:         │
+│    search        │            │  • file_metadata │
+│  • Similarity    │            │  • tags          │
+│    scoring       │            │  • file_tags     │
+│                  │            │  • collections   │
+│  Model:          │            │  • coll_files    │
+│  SentenceXfrmr   │            │                  │
+└──────────────────┘            └──────────────────┘
+        │                                 │
+        └────────────────┬────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    SANDBOX FILESYSTEM                        │
+│                                                              │
+│  sandbox/                                                    │
+│  ├── documents/  (resumes, papers, letters)                │
+│  ├── code/       (Python ML & data scripts)                │
+│  ├── notes/      (meeting notes, ideas)                    │
+│  └── misc/       (todos, etc.)                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Tools
+### Agentic Workflow Example
 
-1. **File Tools** - Read, list, and extract metadata from files
-2. **Search Tools** - Semantic search using vector embeddings
-3. **Tag Tools** - AI-powered tag suggestion and management
-4. **Collection Tools** - Create and manage file collections
+Here's how the system processes: **"Find my machine learning files"**
 
-### Memory
+```
+1. USER INPUT
+   └─> "Find my machine learning files"
 
-- **Short-term Memory**: Tracks conversation history and current session context
-- **Long-term Memory**: Persists file metadata, tags, collections, and embeddings in SQLite and ChromaDB
+2. AGENT REASONING (Gemini 2.0 Flash via ADK)
+   ├─> Analyzes intent: User wants semantic file search
+   ├─> Selects tool: search_files()
+   └─> Determines parameters:
+       {
+         "query": "machine learning",
+         "tags": null,
+         "top_k": 10
+       }
+
+3. TOOL EXECUTION
+   ├─> search_files() is invoked
+   ├─> Generates embedding for "machine learning"
+   ├─> Queries ChromaDB vector store
+   ├─> Retrieves similar documents by cosine similarity
+   ├─> Enriches with tags from SQLite
+   └─> Returns results with metadata
+
+4. AGENT SYNTHESIS
+   ├─> Receives structured tool output
+   ├─> Formats into natural language
+   └─> Generates user-friendly response:
+
+       "I found 2 files about machine learning:
+
+        1. code/ml_experiment.py (87% match)
+           - Bayesian A/B testing implementation
+           - Tags: python, bayesian, statistics
+
+        2. notes/project_ideas.txt (72% match)
+           - AI File Organizer project idea
+           - Tags: ideas, personal"
+
+5. USER RECEIVES RESPONSE
+   └─> Displayed in CLI or ADK web interface
+```
+
+### Tool Categories
+
+The agent has access to **9 specialized tools** organized by function:
+
+#### 1. Search & Discovery Tools
+
+- **`search_files(query, tags, top_k)`** - Semantic search using vector embeddings
+- **`list_files(directory, pattern)`** - Browse sandbox directory structure
+- **`read_file(file_path)`** - Read full file contents
+
+#### 2. Tagging Tools
+
+- **`suggest_tags(file_path)`** - AI-powered tag recommendations
+- **`apply_tags(file_path, tags)`** - Apply tags to files
+- **`get_file_tags(file_path)`** - Retrieve file's current tags
+
+#### 3. Collection Tools
+
+- **`create_collection(name, description)`** - Create new file collections
+- **`add_to_collection(collection_name, file_paths)`** - Add files to collections
+- **`get_collection_files(collection_name)`** - List collection contents
+
+### Memory Systems
+
+The system employs two complementary memory systems:
+
+#### Conversation Memory (Managed by ADK)
+
+- Automatically maintained by Google ADK
+- Tracks conversation history and context
+- Enables multi-turn interactions
+- No manual management required
+
+#### Persistent Memory (Long-term Storage)
+
+##### Vector Store (ChromaDB)
+
+- Stores file content embeddings (384-dimensional vectors)
+- Enables semantic similarity search
+- Fast nearest-neighbor lookup
+- Supports metadata filtering
+
+##### Relational Database (SQLite)
+
+- File metadata and indexing information
+- Tag definitions and file-tag associations
+- Collection definitions and memberships
+- Queryable with SQL for complex operations
+
+### Key Design Principles
+
+1. **Declarative Agent Definition** - Agent behavior defined through configuration, not code
+2. **Pure Function Tools** - Tools are simple, testable Python functions
+3. **Automatic Schema Inference** - ADK infers tool schemas from type hints
+4. **Separation of Concerns** - Clear boundaries between agent logic, tools, and storage
+5. **Extensibility** - Easy to add new tools by writing functions
 
 ## Evaluation
 
