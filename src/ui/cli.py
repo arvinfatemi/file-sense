@@ -6,7 +6,7 @@ from rich.panel import Panel
 from rich.markdown import Markdown
 from rich.prompt import Prompt
 from src.file_concierge.indexer import FileIndexer
-from src.file_concierge.agent import root_agent
+from src.file_concierge.agent import query_agent
 
 
 class CLI:
@@ -15,7 +15,6 @@ class CLI:
     def __init__(self):
         self.console = Console()
         self.indexer = FileIndexer()
-        self.agent = root_agent
 
     def display_welcome(self):
         """Display welcome message."""
@@ -75,7 +74,7 @@ Welcome to your intelligent file assistant!
                     self.console.print("[bold green]Agent:[/bold green] ", end="")
                     try:
                         # Use ADK agent to process the query
-                        response = self.agent.query(user_input)
+                        response = query_agent(user_input)
                         self.console.print(response)
                     except Exception as e:
                         self.console.print(f"[red]Error processing query: {str(e)}[/red]")
@@ -116,7 +115,7 @@ def search(query):
 
     console.print(f"[bold cyan]Searching for:[/bold cyan] {query}")
     try:
-        response = root_agent.query(query)
+        response = query_agent(query)
         console.print(f"\n[bold green]Results:[/bold green]\n{response}")
     except Exception as e:
         console.print(f"[red]Error: {str(e)}[/red]")

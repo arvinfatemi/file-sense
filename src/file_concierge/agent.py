@@ -3,7 +3,9 @@
 This module defines the main agent for semantic file organization and search.
 """
 
+import asyncio
 from google.adk.agents import Agent
+from vertexai.agent_engines import AdkApp
 from src.file_concierge.tools import ALL_TOOLS
 
 # Define the root agent using Google ADK
@@ -46,3 +48,60 @@ root_agent = Agent(
     ),
     tools=ALL_TOOLS,
 )
+
+# Lazy initialization of AdkApp
+_app = None
+
+def _get_app():
+    """Lazy initialization of AdkApp to avoid premature authentication."""
+    global _app
+    if _app is None:
+        _app = AdkApp(agent=root_agent)
+    return _app
+
+
+def query_agent(message: str, user_id: str = "default_user") -> str:
+    """
+    Query the ADK agent with a message and return the response.
+
+    Args:
+        message: User's message/query
+        user_id: User identifier for session management
+
+    Returns:
+        Agent's response as a string
+    """
+    async def _async_query():
+        response_parts = []
+        try:
+            app = _get_app()  # Get or initialize AdkApp
+            async for event in app.async_stream_query(
+                user_id=user_id,
+                message=message
+            ):
+                # Extract content from streaming events
+                if isinstance(event, dict):
+                    # Check for different event types
+                    if 'content' in event:
+                        content = event['content']
+                        if isinstance(content, str):
+                            response_parts.append(content)
+                        elif hasattr(content, 'text'):
+                            response_parts.append(content.text)
+                    elif 'text' in event:
+                        response_parts.append(event['text'])
+
+            # Join all response parts
+            full_response = ''.join(response_parts).strip()
+            return full_response if full_response else "No response generated."
+
+        except Exception as e:
+            return f"Error querying agent: {str(e)}"
+
+    # Run async function in event loop
+    try:
+        return asyncio.run(_async_query())
+    except RuntimeError:
+        # Event loop already running (in async context)
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(_async_query())
