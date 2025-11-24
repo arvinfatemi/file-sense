@@ -1,6 +1,5 @@
 # Google ADK and AI dependencies
-google-genai
-google-generativeai
+google-adk
 
 # Vector database and embeddings
 chromadb

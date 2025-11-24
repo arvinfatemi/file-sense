@@ -20,14 +20,14 @@ AI File Concierge is a capstone project for the [Kaggle 5-Day GenAI Agents Inten
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher (required for Google ADK)
 - Google API key for Gemini ([Get one here](https://makersuite.google.com/app/apikey))
 
 ### Installation
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/file-sense.git
+git clone https://github.com/arvinfatemi/file-sense.git
 cd file-sense
 ```
 
@@ -46,6 +46,7 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 # Edit .env and add your GOOGLE_API_KEY
+# Ensure GOOGLE_GENAI_USE_VERTEXAI=FALSE for API key usage
 ```
 
 5. **Index the sandbox files**
@@ -54,8 +55,23 @@ python main.py index
 ```
 
 6. **Start the interactive CLI**
+
+#### Option A: Custom CLI
+
 ```bash
 python main.py interactive
+```
+
+#### Option B: Google ADK Web UI
+
+```bash
+adk web src/file_concierge
+```
+
+#### Option C: Google ADK Terminal
+
+```bash
+adk run src/file_concierge
 ```
 
 ## Usage Examples
@@ -209,13 +225,50 @@ For a detailed discussion of how to scale this prototype to production, see [PRO
 
 ## Technology Stack
 
-- **Agent Framework**: Google ADK with Gemini
-- **LLM**: Gemini 2.0 Flash
+- **Agent Framework**: [Google ADK (Agent Development Kit)](https://google.github.io/adk-docs/)
+- **LLM**: Gemini 2.0 Flash Experimental
 - **Embeddings**: Sentence Transformers (all-MiniLM-L6-v2)
 - **Vector Store**: ChromaDB
 - **Database**: SQLite
 - **CLI**: Rich, Click
-- **Language**: Python 3.8+
+- **Language**: Python 3.10+
+
+## Architecture with Google ADK
+
+The system uses Google's Agent Development Kit (ADK) for agent orchestration:
+
+### Agent Structure
+
+```python
+# src/file_concierge/agent.py
+from google.adk.agents import Agent
+from src.file_concierge.tools import ALL_TOOLS
+
+root_agent = Agent(
+    name="file_concierge",
+    model="gemini-2.0-flash-exp",
+    description="Intelligent file organization assistant",
+    instruction="You are an AI File Concierge...",
+    tools=ALL_TOOLS  # 9 specialized tools
+)
+```
+
+### Tool Functions
+
+Tools are simple Python functions that the agent can invoke:
+
+```python
+def search_files(query: str, tags: Optional[List[str]] = None, top_k: int = 10) -> dict:
+    """Search for files using natural language queries and/or tags."""
+    # Implementation...
+```
+
+ADK automatically:
+
+- Infers tool schemas from function signatures
+- Handles tool execution and error handling
+- Manages conversation context
+- Provides built-in logging and debugging
 
 <!-- ## Limitations
 

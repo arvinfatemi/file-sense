@@ -5,7 +5,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.markdown import Markdown
 from rich.prompt import Prompt
-from src.agents.file_concierge import FileConcierge
+from src.file_concierge.indexer import FileIndexer
+from src.file_concierge.agent import root_agent
 
 
 class CLI:
@@ -13,7 +14,8 @@ class CLI:
 
     def __init__(self):
         self.console = Console()
-        self.concierge = FileConcierge()
+        self.indexer = FileIndexer()
+        self.agent = root_agent
 
     def display_welcome(self):
         """Display welcome message."""
@@ -57,22 +59,26 @@ Welcome to your intelligent file assistant!
                     break
 
                 elif command == "index":
-                    self.concierge.index_all_files()
+                    self.indexer.index_all_files()
 
                 elif command == "stats":
-                    self.concierge.display_stats()
+                    self.indexer.display_stats()
 
                 elif command == "help":
                     self.display_welcome()
 
                 elif command == "reindex":
-                    self.concierge.index_all_files(force_reindex=True)
+                    self.indexer.index_all_files(force_reindex=True)
 
                 else:
-                    # Process as agent query
-                    self.console.print("[bold green]Agent:[/bold green]", end=" ")
-                    response = self.concierge.query(user_input)
-                    self.console.print(response)
+                    # Process as agent query using ADK
+                    self.console.print("[bold green]Agent:[/bold green] ", end="")
+                    try:
+                        # Use ADK agent to process the query
+                        response = self.agent.query(user_input)
+                        self.console.print(response)
+                    except Exception as e:
+                        self.console.print(f"[red]Error processing query: {str(e)}[/red]")
 
             except KeyboardInterrupt:
                 self.console.print("\n[yellow]Use 'exit' to quit[/yellow]")
@@ -98,27 +104,29 @@ def interactive():
 @cli.command()
 def index():
     """Index all files in the sandbox directory."""
-    concierge = FileConcierge()
-    concierge.index_all_files()
+    indexer = FileIndexer()
+    indexer.index_all_files()
 
 
 @cli.command()
 @click.argument("query")
 def search(query):
     """Search files using a natural language query."""
-    concierge = FileConcierge()
     console = Console()
 
     console.print(f"[bold cyan]Searching for:[/bold cyan] {query}")
-    response = concierge.query(query)
-    console.print(f"\n[bold green]Results:[/bold green]\n{response}")
+    try:
+        response = root_agent.query(query)
+        console.print(f"\n[bold green]Results:[/bold green]\n{response}")
+    except Exception as e:
+        console.print(f"[red]Error: {str(e)}[/red]")
 
 
 @cli.command()
 def stats():
     """Display system statistics."""
-    concierge = FileConcierge()
-    concierge.display_stats()
+    indexer = FileIndexer()
+    indexer.display_stats()
 
 
 if __name__ == "__main__":
