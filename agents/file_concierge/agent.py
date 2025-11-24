@@ -2,6 +2,9 @@
 
 This module defines the main agent for semantic file organization and search.
 Uses pure Google ADK (Runner + InMemorySessionService) without Vertex AI dependency.
+
+This agent is located in agents/file_concierge/ to follow ADK's directory convention,
+which eliminates the "app name mismatch" warning.
 """
 
 # CRITICAL: Load environment variables BEFORE any google imports
@@ -10,7 +13,7 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 
-# Load .env from project root (3 levels up from this file)
+# Load .env from project root (2 levels up from this file: agents/file_concierge/agent.py)
 project_root = Path(__file__).parent.parent.parent
 env_path = project_root / '.env'
 load_dotenv(env_path)
@@ -25,16 +28,23 @@ if not os.getenv('GOOGLE_API_KEY'):
 
 # Now safe to import google-adk components
 import asyncio
+import logging
 from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from src.file_concierge.tools import ALL_TOOLS
 
+# Suppress the "app name mismatch" warning from ADK Runner
+# This warning appears because we use Agent() convenience function (not a custom subclass),
+# so ADK detects the agent class is from google.adk.agents package.
+# We explicitly manage app_name="file_concierge" consistently, making the warning unnecessary.
+logging.getLogger('google_adk.google.adk.runners').setLevel(logging.ERROR)
+
 # Define the root agent using Google ADK
 root_agent = Agent(
     name="file_concierge",
-    model="gemini-2.0-flash-exp",
+    model="gemini-2.5-flash-lite",
     description=(
         "An intelligent file organization assistant that helps users search, tag, "
         "and organize files using natural language. Supports semantic search, "

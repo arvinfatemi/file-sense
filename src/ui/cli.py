@@ -6,7 +6,7 @@ from rich.panel import Panel
 from rich.markdown import Markdown
 from rich.prompt import Prompt
 from src.file_concierge.indexer import FileIndexer
-from src.file_concierge.agent import query_agent
+from agents.file_concierge.agent import query_agent
 
 
 class CLI:

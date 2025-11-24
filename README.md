@@ -183,7 +183,7 @@ The system implements an **agentic architecture** using Google's Agent Developme
 │  Agent Definition:                                          │
 │    Agent(                                                   │
 │      name="file_concierge",                                │
-│      model="gemini-2.0-flash-exp",                         │
+│      model="gemini-2.5-flash-lite",                         │
 │      tools=[9 specialized functions]                       │
 │    )                                                        │
 └────────────────────────┬────────────────────────────────────┘
