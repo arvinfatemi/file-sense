@@ -1,6 +1,9 @@
-"""File Concierge agent package."""
+"""File Concierge package - tools and utilities.
 
-from src.file_concierge.agent import root_agent
+Note: The agent is now located in agents/file_concierge/agent.py
+following Google ADK's directory conventions.
+"""
+
 from src.file_concierge import tools
 
-__all__ = ["root_agent", "tools"]
+__all__ = ["tools"]
