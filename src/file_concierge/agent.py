@@ -4,6 +4,26 @@ This module defines the main agent for semantic file organization and search.
 Uses pure Google ADK (Runner + InMemorySessionService) without Vertex AI dependency.
 """
 
+# CRITICAL: Load environment variables BEFORE any google imports
+# This ensures GOOGLE_API_KEY is available when google-genai initializes
+import os
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Load .env from project root (3 levels up from this file)
+project_root = Path(__file__).parent.parent.parent
+env_path = project_root / '.env'
+load_dotenv(env_path)
+
+# Verify API key is loaded
+if not os.getenv('GOOGLE_API_KEY'):
+    raise ValueError(
+        f"GOOGLE_API_KEY not found in environment variables!\n"
+        f"Expected .env file at: {env_path}\n"
+        f"Please create .env file with your API key."
+    )
+
+# Now safe to import google-adk components
 import asyncio
 from google.adk.agents import Agent
 from google.adk.runners import Runner
