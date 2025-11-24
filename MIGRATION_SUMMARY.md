@@ -2,7 +2,7 @@
 
 ## Overview
 
-Successfully migrated the AI File Concierge from using `google.generativeai` directly to using **Google ADK (Agent Development Kit)**.
+Successfully migrated the AI File Concierge from using `google.generativeai` directly to using **pure Google ADK (Agent Development Kit)** with Runner and InMemorySessionService, without Vertex AI dependencies.
 
 ## What Changed
 
@@ -69,9 +69,12 @@ class OrchestratorAgent:
             ...
 ```
 
-**After** (~50 lines in `agent.py`):
+**After** (~140 lines in `agent.py`):
 ```python
 from google.adk.agents import Agent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai import types
 from src.file_concierge.tools import ALL_TOOLS
 
 root_agent = Agent(
@@ -79,7 +82,15 @@ root_agent = Agent(
     model="gemini-2.0-flash-exp",
     description="Intelligent file organization assistant",
     instruction="You are an AI File Concierge...",
-    tools=ALL_TOOLS  # ADK handles everything!
+    tools=ALL_TOOLS
+)
+
+# Pure ADK Runner setup (no Vertex AI)
+_session_service = InMemorySessionService()
+_runner = Runner(
+    agent=root_agent,
+    app_name="file_concierge",
+    session_service=_session_service
 )
 ```
 
@@ -117,9 +128,9 @@ response = concierge.query(user_input)
 
 **After:**
 ```python
-from src.file_concierge.agent import root_agent
+from src.file_concierge.agent import query_agent
 
-response = root_agent.query(user_input)
+response = query_agent(user_input)  # Uses Runner + InMemorySessionService
 ```
 
 ## Benefits
@@ -130,12 +141,14 @@ response = root_agent.query(user_input)
 - **Net**: ~100 lines less code with better structure
 
 ### Features Gained
-1. **Built-in Web UI**: `adk web src/file_concierge`
-2. **Built-in Terminal Chat**: `adk run src/file_concierge`
-3. **Automatic Logging**: ADK provides detailed execution logs
-4. **Better Error Handling**: ADK handles tool execution errors gracefully
-5. **Schema Inference**: No manual JSON schemas needed
-6. **Conversation Management**: ADK handles context automatically
+1. **Pure ADK Architecture**: Uses Runner + InMemorySessionService (no Vertex AI)
+2. **Built-in Web UI**: `adk web src/file_concierge`
+3. **Built-in Terminal Chat**: `adk run src/file_concierge`
+4. **Automatic Logging**: ADK provides detailed execution logs
+5. **Better Error Handling**: ADK handles tool execution errors gracefully
+6. **Schema Inference**: No manual JSON schemas needed
+7. **Session Management**: Proper conversation context with InMemorySessionService
+8. **Lightweight**: No heavy Vertex AI dependencies
 
 ### Developer Experience
 - ✅ Simpler code structure
@@ -232,8 +245,42 @@ adk web src/file_concierge
 adk run src/file_concierge
 ```
 
+## Pure ADK Implementation (Latest Update)
+
+### Why Pure ADK?
+
+After the initial migration, we further refined the implementation to use **pure Google ADK** components:
+
+```python
+# Before: Using Vertex AI wrapper
+from vertexai.agent_engines import AdkApp
+app = AdkApp(agent=root_agent)
+response = await app.async_stream_query(message=message)
+
+# After: Pure Google ADK
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+
+runner = Runner(agent=root_agent, session_service=InMemorySessionService())
+async for event in runner.run_async(new_message=content):
+    # Process events
+```
+
+### Benefits of Pure ADK:
+- ✅ **No Vertex AI dependency**: Only requires `google-adk` package
+- ✅ **Works with API keys**: No GCP project setup needed
+- ✅ **Lighter weight**: Fewer dependencies
+- ✅ **True to ADK architecture**: Uses official ADK patterns
+- ✅ **Local-first**: Perfect for development and testing
+- ✅ **Still deployable**: Can deploy to Agent Engine later if needed
+
+### Architecture:
+- **Runner**: Orchestrates agent execution and event processing
+- **InMemorySessionService**: Manages conversation sessions locally
+- **Event streaming**: Direct access to ADK events for fine-grained control
+
 ## Conclusion
 
-The migration to Google ADK significantly simplifies the codebase while adding powerful new features. The agent definition is now declarative and clean, tools are simple functions, and we get a professional-grade framework with built-in UI and debugging capabilities.
+The migration to pure Google ADK significantly simplifies the codebase while adding powerful new features. The agent definition is now declarative and clean, tools are simple functions, and we get a professional-grade framework with built-in UI and debugging capabilities—all without heavy cloud dependencies.
 
-This brings the project in line with the Kaggle capstone requirements for using Google ADK and positions it as a modern, maintainable agentic system.
+This brings the project in line with the Kaggle capstone requirements for using Google ADK and positions it as a modern, maintainable, lightweight agentic system.

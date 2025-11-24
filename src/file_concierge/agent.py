@@ -1,11 +1,14 @@
 """AI File Concierge agent using Google ADK.
 
 This module defines the main agent for semantic file organization and search.
+Uses pure Google ADK (Runner + InMemorySessionService) without Vertex AI dependency.
 """
 
 import asyncio
 from google.adk.agents import Agent
-from vertexai.agent_engines import AdkApp
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai import types
 from src.file_concierge.tools import ALL_TOOLS
 
 # Define the root agent using Google ADK
@@ -49,47 +52,84 @@ root_agent = Agent(
     tools=ALL_TOOLS,
 )
 
-# Lazy initialization of AdkApp
-_app = None
-
-def _get_app():
-    """Lazy initialization of AdkApp to avoid premature authentication."""
-    global _app
-    if _app is None:
-        _app = AdkApp(agent=root_agent)
-    return _app
+# Lazy initialization of Runner and SessionService
+_runner = None
+_session_service = None
 
 
-def query_agent(message: str, user_id: str = "default_user") -> str:
+def _get_runner():
+    """Lazy initialization of Runner and SessionService to avoid premature setup."""
+    global _runner, _session_service
+    if _runner is None:
+        _session_service = InMemorySessionService()
+        _runner = Runner(
+            agent=root_agent,
+            app_name="file_concierge",
+            session_service=_session_service
+        )
+    return _runner, _session_service
+
+
+def query_agent(message: str, user_id: str = "default_user", session_id: str = "default_session") -> str:
     """
     Query the ADK agent with a message and return the response.
+
+    Uses pure Google ADK (Runner + InMemorySessionService) without Vertex AI dependency.
 
     Args:
         message: User's message/query
         user_id: User identifier for session management
+        session_id: Session identifier (defaults to "default_session")
 
     Returns:
         Agent's response as a string
     """
     async def _async_query():
+        runner, session_service = _get_runner()
+
+        # Create or get session (session methods are async)
+        try:
+            session = await session_service.get_session(
+                app_name="file_concierge",
+                user_id=user_id,
+                session_id=session_id
+            )
+            if session is None:
+                # Session doesn't exist, create it
+                session = await session_service.create_session(
+                    app_name="file_concierge",
+                    user_id=user_id,
+                    session_id=session_id
+                )
+        except Exception:
+            # Session doesn't exist or error occurred, create it
+            session = await session_service.create_session(
+                app_name="file_concierge",
+                user_id=user_id,
+                session_id=session_id
+            )
+
+        # Create content from user message
+        content = types.Content(role='user', parts=[types.Part(text=message)])
+
+        # Run agent and collect response
         response_parts = []
         try:
-            app = _get_app()  # Get or initialize AdkApp
-            async for event in app.async_stream_query(
+            async for event in runner.run_async(
                 user_id=user_id,
-                message=message
+                session_id=session_id,
+                new_message=content
             ):
-                # Extract content from streaming events
-                if isinstance(event, dict):
-                    # Check for different event types
-                    if 'content' in event:
-                        content = event['content']
-                        if isinstance(content, str):
-                            response_parts.append(content)
-                        elif hasattr(content, 'text'):
-                            response_parts.append(content.text)
-                    elif 'text' in event:
-                        response_parts.append(event['text'])
+                # Extract text from events
+                if hasattr(event, 'content') and event.content:
+                    if hasattr(event.content, 'parts'):
+                        for part in event.content.parts:
+                            if hasattr(part, 'text') and part.text:
+                                response_parts.append(part.text)
+
+                # Check if this is the final response
+                if hasattr(event, 'is_final_response') and event.is_final_response():
+                    break
 
             # Join all response parts
             full_response = ''.join(response_parts).strip()

@@ -1,6 +1,6 @@
 # Architecture Flow - AI File Concierge
 
-This document explains the complete architecture and data flow of the AI File Concierge system using Google ADK.
+This document explains the complete architecture and data flow of the AI File Concierge system using pure Google ADK (Runner + InMemorySessionService, no Vertex AI dependency).
 
 ## Visual Architecture
 
@@ -34,11 +34,18 @@ This document explains the complete architecture and data flow of the AI File Co
 │  Google ADK Agent (src/file_concierge/agent.py)                 │
 │                                                                  │
 │  from google.adk.agents import Agent                            │
+│  from google.adk.runners import Runner                          │
+│  from google.adk.sessions import InMemorySessionService         │
 │                                                                  │
 │  root_agent = Agent(                                            │
 │      name="file_concierge",                                     │
 │      model="gemini-2.0-flash-exp",                             │
 │      tools=[9 tool functions]                                   │
+│  )                                                              │
+│                                                                  │
+│  runner = Runner(                                               │
+│      agent=root_agent,                                          │
+│      session_service=InMemorySessionService()                   │
 │  )                                                              │
 │                                                                  │
 │  Responsibilities:                                              │
@@ -47,6 +54,7 @@ This document explains the complete architecture and data flow of the AI File Co
 │  • Execute tools with parameters                                │
 │  • Synthesize responses                                         │
 │  • Handle multi-turn conversations                              │
+│  • Manage session state (via InMemorySessionService)            │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
@@ -201,6 +209,11 @@ The agent is the "brain" of the system:
 
 ```python
 # src/file_concierge/agent.py
+from google.adk.agents import Agent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai import types
+
 root_agent = Agent(
     name="file_concierge",
     model="gemini-2.0-flash-exp",
@@ -208,15 +221,32 @@ root_agent = Agent(
     instruction="You are an AI File Concierge that helps...",
     tools=ALL_TOOLS
 )
+
+# Pure ADK setup (no Vertex AI)
+session_service = InMemorySessionService()
+runner = Runner(
+    agent=root_agent,
+    app_name="file_concierge",
+    session_service=session_service
+)
+
+# Query execution
+async for event in runner.run_async(
+    user_id="user_1",
+    session_id="session_1",
+    new_message=types.Content(role='user', parts=[types.Part(text=query)])
+):
+    # Process events
 ```
 
-**What ADK handles automatically:**
+**What Pure ADK provides:**
 - Tool schema inference from function signatures
 - Function calling (selecting which tool to use)
 - Parameter extraction from natural language
 - Error handling and retries
-- Conversation context management
-- Response generation
+- Session management via InMemorySessionService
+- Event streaming for real-time responses
+- No Vertex AI/GCP dependencies
 
 ### 2. **Tool Functions**
 
@@ -293,11 +323,14 @@ main.py
 from src.ui.cli import cli
 
 # CLI imports
-from src.file_concierge.agent import root_agent
+from src.file_concierge.agent import query_agent  # Pure ADK query function
 from src.file_concierge.indexer import FileIndexer
 
-# Agent imports
-from google.adk.agents import Agent  # ← Google ADK
+# Agent imports (pure ADK)
+from google.adk.agents import Agent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai import types
 from src.file_concierge.tools import ALL_TOOLS
 
 # Tools import
@@ -365,7 +398,7 @@ collection_files
 └── added_at
 ```
 
-## Benefits of ADK Architecture
+## Benefits of Pure ADK Architecture
 
 ### Before (Manual Implementation)
 - ❌ Manual tool schema definition (~100 lines)
@@ -374,14 +407,17 @@ collection_files
 - ❌ Custom error handling
 - ❌ Manual conversation management
 
-### After (Google ADK)
+### After (Pure Google ADK)
 - ✅ Automatic schema inference
 - ✅ Built-in function calling
 - ✅ Automatic tool dispatching
 - ✅ Robust error handling
-- ✅ Managed conversation context
+- ✅ Session management via InMemorySessionService
+- ✅ Event streaming for real-time responses
 - ✅ Built-in logging and debugging
 - ✅ Web UI out of the box (`adk web`)
+- ✅ No Vertex AI/GCP dependencies
+- ✅ Works with just GOOGLE_API_KEY
 
 ## Performance Characteristics
 
