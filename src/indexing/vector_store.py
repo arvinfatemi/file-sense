@@ -25,10 +25,13 @@ class VectorStore:
             settings=Settings(anonymized_telemetry=False)
         )
 
-        # Get or create collection
+        # Get or create collection with cosine distance metric
         self.collection = self.client.get_or_create_collection(
             name="file_embeddings",
-            metadata={"description": "File content embeddings for semantic search"}
+            metadata={
+                "description": "File content embeddings for semantic search",
+                "hnsw:space": "cosine"  # Use cosine similarity
+            }
         )
 
     def add_document(self, file_path: str, content: str, metadata: Dict[str, Any] = None):

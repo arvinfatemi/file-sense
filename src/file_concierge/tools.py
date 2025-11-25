@@ -5,10 +5,28 @@ These functions are directly callable by the ADK agent.
 
 from typing import List, Optional
 from pathlib import Path
+import sys
 from src.memory.long_term import LongTermMemory
 from src.indexing.vector_store import VectorStore
 from src.indexing.file_processor import FileProcessor
 from config import config
+
+# Validate sandbox directory exists before initializing tools
+if not config.SANDBOX_DIR.exists():
+    print(f"ERROR: Sandbox directory not found!", file=sys.stderr)
+    print(f"Expected: {config.SANDBOX_DIR}", file=sys.stderr)
+    print(f"Current working directory: {Path.cwd()}", file=sys.stderr)
+    raise RuntimeError(
+        f"Sandbox directory not found at: {config.SANDBOX_DIR}\n"
+        f"Please ensure the project structure is intact."
+    )
+
+# Log paths for debugging
+print(f"[DEBUG] Tools initialized with paths:", file=sys.stderr)
+print(f"  PROJECT_ROOT: {config.PROJECT_ROOT}", file=sys.stderr)
+print(f"  SANDBOX_DIR: {config.SANDBOX_DIR}", file=sys.stderr)
+print(f"  DATA_DIR: {config.DATA_DIR}", file=sys.stderr)
+print(f"  Current working directory: {Path.cwd()}", file=sys.stderr)
 
 # Initialize shared resources
 _memory = LongTermMemory()
@@ -245,12 +263,23 @@ def list_files(directory: str = "", pattern: str = "*") -> dict:
     """
     try:
         search_dir = config.SANDBOX_DIR / directory
+        print(f"[DEBUG] list_files() called with directory='{directory}', pattern='{pattern}'", file=sys.stderr)
+        print(f"[DEBUG] Resolved search_dir: {search_dir}", file=sys.stderr)
+        print(f"[DEBUG] search_dir.exists(): {search_dir.exists()}", file=sys.stderr)
 
         if not search_dir.exists():
-            return {"status": "error", "error_message": f"Directory not found: {directory}"}
+            return {"status": "error", "error_message": f"Directory not found: {directory} (resolved to: {search_dir})"}
 
         files = []
-        for file_path in search_dir.glob(pattern):
+        # Use rglob for recursive search if pattern doesn't start with **/
+        # This allows patterns like "*.py" to search subdirectories
+        if pattern.startswith("**/"):
+            glob_method = search_dir.glob
+        else:
+            # For simple patterns, search recursively using rglob
+            glob_method = search_dir.rglob
+
+        for file_path in glob_method(pattern):
             if file_path.is_file():
                 relative_path = file_path.relative_to(config.SANDBOX_DIR)
                 files.append({
@@ -283,9 +312,12 @@ def read_file(file_path: str) -> dict:
     """
     try:
         full_path = config.SANDBOX_DIR / file_path
+        print(f"[DEBUG] read_file() called with file_path='{file_path}'", file=sys.stderr)
+        print(f"[DEBUG] Resolved full_path: {full_path}", file=sys.stderr)
+        print(f"[DEBUG] full_path.exists(): {full_path.exists()}", file=sys.stderr)
 
         if not full_path.exists():
-            return {"status": "error", "error_message": f"File not found: {file_path}"}
+            return {"status": "error", "error_message": f"File not found: {file_path} (resolved to: {full_path})"}
 
         metadata = _file_processor.process_file(full_path, deep=True)
         content = metadata.get("text_content") or metadata.get("text_sample", "")

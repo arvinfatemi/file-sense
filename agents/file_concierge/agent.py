@@ -10,13 +10,19 @@ which eliminates the "app name mismatch" warning.
 # CRITICAL: Load environment variables BEFORE any google imports
 # This ensures GOOGLE_API_KEY is available when google-genai initializes
 import os
+import sys
 from dotenv import load_dotenv
 from pathlib import Path
 
 # Load .env from project root (2 levels up from this file: agents/file_concierge/agent.py)
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent.parent.resolve()
 env_path = project_root / '.env'
 load_dotenv(env_path)
+
+# Add project root to sys.path so we can import from src/ directory
+# This is necessary when ADK loads the agent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 # Verify API key is loaded
 if not os.getenv('GOOGLE_API_KEY'):

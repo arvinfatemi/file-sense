@@ -9,10 +9,10 @@ load_dotenv()
 class Config:
     """Application configuration."""
 
-    # Project paths
-    PROJECT_ROOT = Path(__file__).parent.parent
-    SANDBOX_DIR = PROJECT_ROOT / "sandbox"
-    DATA_DIR = PROJECT_ROOT / "data"
+    # Project paths - use .resolve() for absolute paths
+    PROJECT_ROOT = Path(__file__).parent.parent.resolve()
+    SANDBOX_DIR = (PROJECT_ROOT / "sandbox").resolve()
+    DATA_DIR = (PROJECT_ROOT / "data").resolve()
 
     # API Configuration
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -49,4 +49,26 @@ class Config:
         (cls.SANDBOX_DIR / "images").mkdir(exist_ok=True)
         (cls.SANDBOX_DIR / "misc").mkdir(exist_ok=True)
 
+    @classmethod
+    def validate_paths(cls):
+        """Validate that critical paths exist and are accessible."""
+        import sys
+
+        if not cls.PROJECT_ROOT.exists():
+            print(f"ERROR: Project root not found at: {cls.PROJECT_ROOT}", file=sys.stderr)
+            print(f"Current working directory: {Path.cwd()}", file=sys.stderr)
+            raise RuntimeError(f"Project root directory not found: {cls.PROJECT_ROOT}")
+
+        if not cls.SANDBOX_DIR.exists():
+            print(f"WARNING: Sandbox directory not found at: {cls.SANDBOX_DIR}", file=sys.stderr)
+            print(f"Creating sandbox directory...", file=sys.stderr)
+            cls.ensure_directories()
+
+        if not cls.DATA_DIR.exists():
+            print(f"WARNING: Data directory not found at: {cls.DATA_DIR}", file=sys.stderr)
+            print(f"Creating data directory...", file=sys.stderr)
+            cls.ensure_directories()
+
 config = Config()
+# Validate paths on module import
+config.validate_paths()
